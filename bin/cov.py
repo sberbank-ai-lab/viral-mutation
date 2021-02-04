@@ -4,7 +4,6 @@ from mutation import *
 
 np.random.seed(1)
 random.seed(1)
-
 AAs = [
     'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H',
     'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W',
@@ -21,7 +20,7 @@ def parse_args():
     parser.add_argument('--dim', type=int, default=512,
                         help='Embedding dimension')
     parser.add_argument('--batch-size', type=int, default=500,
-                        help='Training minibatch size')
+                        help='Training and inference minibatch size')
     parser.add_argument('--n-epochs', type=int, default=11,
                         help='Number of training epochs')
     parser.add_argument('--seed', type=int, default=1,
@@ -179,7 +178,7 @@ def setup(args):
     vocab_size = len(AAs) + 2
 
     model = get_model(args, seq_len, vocab_size,
-                      inference_batch_size=1200)
+                      inference_batch_size=args.batch_size)
 
     return model, seqs
 
