@@ -5,13 +5,13 @@
 *.png
 *.pyc
 *.svg
-*.txt
+/*.txt
 *~
 .#*
 R/*
 ZIFA*
 build/
-data
+/data/
 dist/
 plots*
 target*
