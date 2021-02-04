@@ -27,4 +27,5 @@ Important columns:
 - `site`: mutation position (1-based, corresponds to the reference sequence from above);
 - `wildtype`: reference amino acid;
 - `mutation`: mutation amino acid;
-- `mut_escape`: mutation escape value.
+- `mut_escape`: mutation escape value;
+- `condition`: antibodies type.
