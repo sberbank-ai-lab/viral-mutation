@@ -1,14 +1,15 @@
-from utils import *
-
 import tensorflow as tf
 from tensorflow.keras import Input
 from tensorflow.keras.callbacks import ModelCheckpoint
-from tensorflow.keras.layers import (
-    concatenate, Activation, Dense, Embedding, LSTM, Reshape)
+from tensorflow.keras.layers import (LSTM, Activation, Dense, Embedding,
+                                     Reshape, concatenate)
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+
+from utils import *
+
 
 class LanguageModel(object):
     def __init__(self, seed=None):
