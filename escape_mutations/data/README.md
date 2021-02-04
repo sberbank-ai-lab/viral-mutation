@@ -47,3 +47,11 @@ Columns:
 - All other column names correspond to the available antibodies types. So each row contains mutation escape values for all available antibodies.
 
   **NOTE:** If there is no data for a particular antibodies type, then `-9` is placed!
+
+Associated `.fasta` files is
+
+```
+aggregated_mut_escapes.fasta
+```
+
+**NOTE:** The first record in the file is a header.
