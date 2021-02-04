@@ -1,7 +1,15 @@
+import tensorflow as tf
+
 from mutation import *
 
 np.random.seed(1)
 random.seed(1)
+
+AAs = [
+    'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H',
+    'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W',
+    'Y', 'V', 'X', 'Z', 'J', 'U', 'B',
+]
 
 def parse_args():
     import argparse
@@ -231,14 +239,9 @@ def analyze_embedding(args, model, seqs, vocabulary):
     plot_umap(adata_cov2, [ 'host', 'group', 'country' ],
               namespace='cov7')
 
-if __name__ == '__main__':
+def main():
     args = parse_args()
 
-    AAs = [
-        'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H',
-        'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W',
-        'Y', 'V', 'X', 'Z', 'J', 'U', 'B',
-    ]
     vocabulary = { aa: idx + 1 for idx, aa in enumerate(sorted(AAs)) }
 
     model, seqs = setup(args)
@@ -296,8 +299,8 @@ if __name__ == '__main__':
                                  comb_batch=10000, prob_cutoff=0., beta=1.)
 
     if args.reinfection:
-        from reinfection import load_to2020, load_ratg13, load_sarscov1
         from plot_reinfection import plot_reinfection
+        from reinfection import load_ratg13, load_sarscov1, load_to2020
 
         tprint('To et al. 2020...')
         wt_seq, mutants = load_to2020()
@@ -317,3 +320,21 @@ if __name__ == '__main__':
         analyze_reinfection(args, model, seqs, vocabulary, wt_seq, mutants,
                             namespace='sarscov1')
         plot_reinfection(namespace='sarscov1')
+
+
+if __name__ == '__main__':
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+        try:
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+        except RuntimeError as e:
+            print(e)
+
+    strategy = tf.distribute.MirroredStrategy()
+
+    options = tf.data.Options()
+    options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
+
+    with strategy.scope():
+        main()
