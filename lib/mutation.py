@@ -1,4 +1,4 @@
-from utils import *
+from lib.utils import *
 
 def err_model(name):
     raise ValueError('Model {} not supported'.format(name))

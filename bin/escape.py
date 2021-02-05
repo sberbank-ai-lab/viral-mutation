@@ -1,4 +1,4 @@
-from utils import Seq, SeqIO
+from lib.utils import Seq, SeqIO
 
 def load_doud2018(survival_cutoff=0.05):
     pos_map = {}

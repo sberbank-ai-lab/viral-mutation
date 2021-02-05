@@ -1,6 +1,7 @@
 import tensorflow as tf
-
-from mutation import *
+from lib.mutation import *
+from lib.sequence_parser_utils import (parse_aggregated_mut_escapes,
+                                       parse_gisaid, parse_nih, parse_viprbrc)
 
 np.random.seed(1)
 random.seed(1)
@@ -9,6 +10,13 @@ AAs = [
     'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W',
     'Y', 'V', 'X', 'Z', 'J', 'U', 'B',
 ]
+
+TRAIN_TEST_FNAMES = ['data/cov/sars_cov2_seqs.fa',
+                     'data/cov/viprbrc_db.fasta',
+                     'data/cov/gisaid.fasta']
+
+AGGREGATED_MUT_ESCAPES_FNAMES = ['escape_mutations/data/aggregated_mut_escapes.fasta']
+
 
 def parse_args():
     import argparse
@@ -41,91 +49,19 @@ def parse_args():
                         help='Analyze combinatorial fitness')
     parser.add_argument('--reinfection', action='store_true',
                         help='Analyze reinfection cases')
+    parser.add_argument('--mut_escapes', action='store_true',
+                        help='Analyze mutation escapes')
     args = parser.parse_args()
     return args
 
-def parse_viprbrc(entry):
-    fields = entry.split('|')
-    if fields[7] == 'NA':
-        date = None
-    else:
-        date = fields[7].split('/')[0]
-        date = dparse(date.replace('_', '-'))
-
-    country = fields[9]
-    from locations import country2continent
-    if country in country2continent:
-        continent = country2continent[country]
-    else:
-        country = 'NA'
-        continent = 'NA'
-
-    from mammals import species2group
-
-    meta = {
-        'strain': fields[5],
-        'host': fields[8],
-        'group': species2group[fields[8]],
-        'country': country,
-        'continent': continent,
-        'dataset': 'viprbrc',
-    }
-    return meta
-
-def parse_nih(entry):
-    fields = entry.split('|')
-
-    country = fields[3]
-    from locations import country2continent
-    if country in country2continent:
-        continent = country2continent[country]
-    else:
-        country = 'NA'
-        continent = 'NA'
-
-    meta = {
-        'strain': 'SARS-CoV-2',
-        'host': 'human',
-        'group': 'human',
-        'country': country,
-        'continent': continent,
-        'dataset': 'nih',
-    }
-    return meta
-
-def parse_gisaid(entry):
-    fields = entry.split('|')
-
-    type_id = fields[1].split('/')[1]
-
-    if type_id in { 'bat', 'canine', 'cat', 'env', 'mink',
-                    'pangolin', 'tiger' }:
-        host = type_id
-        country = 'NA'
-        continent = 'NA'
-    else:
-        host = 'human'
-        from locations import country2continent
-        if type_id in country2continent:
-            country = type_id
-            continent = country2continent[country]
-        else:
-            country = 'NA'
-            continent = 'NA'
-
-    from mammals import species2group
-
-    meta = {
-        'strain': fields[1],
-        'host': host,
-        'group': species2group[host].lower(),
-        'country': country,
-        'continent': continent,
-        'dataset': 'gisaid',
-    }
-    return meta
-
 def process(fnames):
+    parse_fn_by_fname = {
+        'data/cov/sars_cov2_seqs.fa': parse_nih,
+        'data/cov/viprbrc_db.fasta': parse_viprbrc,
+        'data/cov/gisaid.fasta': parse_gisaid,
+        'escape_mutations/data/aggregated_mut_escapes.fasta': parse_aggregated_mut_escapes,
+    }
+
     seqs = {}
     for fname in fnames:
         for record in SeqIO.parse(fname, 'fasta'):
@@ -135,12 +71,9 @@ def process(fnames):
                 continue
             if record.seq not in seqs:
                 seqs[record.seq] = []
-            if fname == 'data/cov/viprbrc_db.fasta':
-                meta = parse_viprbrc(record.description)
-            elif fname == 'data/cov/gisaid.fasta':
-                meta = parse_gisaid(record.description)
-            else:
-                meta = parse_nih(record.description)
+
+            meta = parse_fn_by_fname[fname](record.description)
+
             meta['accession'] = record.description
             seqs[record.seq].append(meta)
 
@@ -168,10 +101,7 @@ def split_seqs(seqs, split_method='random'):
     return train_seqs, test_seqs
 
 def setup(args):
-    fnames = [ 'data/cov/sars_cov2_seqs.fa',
-               'data/cov/viprbrc_db.fasta',
-               'data/cov/gisaid.fasta' ]
-
+    fnames = AGGREGATED_MUT_ESCAPES_FNAMES if args.mut_escapes else TRAIN_TEST_FNAMES
     seqs = process(fnames)
 
     seq_len = max([ len(seq) for seq in seqs ]) + 2

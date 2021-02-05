@@ -1,4 +1,4 @@
-from utils import *
+from lib.utils import *
 
 from intervaltree import IntervalTree
 

@@ -1,4 +1,4 @@
-from utils import Counter, SeqIO
+from lib.utils import Counter, SeqIO
 
 from Bio.Seq import translate
 import numpy as np
