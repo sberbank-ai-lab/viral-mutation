@@ -1,4 +1,6 @@
 import tensorflow as tf
+import pandas as pd
+
 from lib.mutation import *
 from lib.sequence_parser_utils import (parse_aggregated_mut_escapes,
                                        parse_gisaid, parse_nih, parse_viprbrc)
@@ -16,6 +18,7 @@ TRAIN_TEST_FNAMES = ['data/cov/sars_cov2_seqs.fa',
                      'data/cov/gisaid.fasta']
 
 AGGREGATED_MUT_ESCAPES_FNAMES = ['escape_mutations/data/aggregated_mut_escapes.fasta']
+AGGREGATED_MUT_ESCAPES_EMBEDDINGS_OUTPUT_FNAME = 'escape_mutations/data/mut_escape_embeddings.csv'
 
 
 def parse_args():
@@ -60,6 +63,7 @@ def process(fnames):
         'data/cov/viprbrc_db.fasta': parse_viprbrc,
         'data/cov/gisaid.fasta': parse_gisaid,
         'escape_mutations/data/aggregated_mut_escapes.fasta': parse_aggregated_mut_escapes,
+        'escape_mutations/data/aggregated_mut_escapes_test.fasta': parse_aggregated_mut_escapes,
     }
 
     seqs = {}
@@ -72,7 +76,7 @@ def process(fnames):
             if record.seq not in seqs:
                 seqs[record.seq] = []
 
-            meta = parse_fn_by_fname[fname](record.description)
+            meta = parse_fn_by_fname[fname](record)
 
             meta['accession'] = record.description
             seqs[record.seq].append(meta)
@@ -83,6 +87,8 @@ def process(fnames):
             for meta in metas:
                 of.write('>{}\n'.format(meta['accession']))
                 of.write('{}\n'.format(str(seq)))
+
+    tprint('Total different seqs read: {}'.format(len(seqs)))
 
     return seqs
 
@@ -130,7 +136,7 @@ def plot_umap(adata, categories, namespace='cov'):
                    save='_{}_{}.png'.format(namespace, category))
 
 def analyze_embedding(args, model, seqs, vocabulary):
-    seqs = embed_seqs(args, model, seqs, vocabulary, use_cache=True)
+    seqs = embed_seqs(args, model, seqs, vocabulary, use_cache=False)
 
     X, obs = [], {}
     obs['n_seq'] = []
@@ -168,6 +174,29 @@ def analyze_embedding(args, model, seqs, vocabulary):
     plot_umap(adata_cov2, [ 'host', 'group', 'country' ],
               namespace='cov7')
 
+
+def create_mut_escape_embeddings(args, model, seqs, vocabulary):
+    seqs = embed_seqs(args, model, seqs, vocabulary, use_cache=True)
+
+    data = []
+    for seq in seqs:
+        meta = seqs[seq][0]
+        row = [meta['id']]
+        row.extend(meta['embedding'].mean(0))
+        data.append(row)
+
+    header = ['id']
+    for i in range(len(data[0]) - 1):
+        header.append('x_{}'.format(i))
+
+    df = pd.DataFrame(data, columns=header)
+    df.to_csv(
+        AGGREGATED_MUT_ESCAPES_EMBEDDINGS_OUTPUT_FNAME,
+        index=False,
+        header=True
+    )
+
+
 def main():
     args = parse_args()
 
@@ -197,6 +226,17 @@ def main():
             raise ValueError('Embeddings not available for models: {}'
                              .format(', '.join(no_embed)))
         analyze_embedding(args, model, seqs, vocabulary)
+
+    if args.mut_escapes:
+        if args.checkpoint is None and not args.train:
+            raise ValueError('Model must be trained or loaded '
+                             'from checkpoint.')
+        no_embed = { 'hmm' }
+        if args.model_name in no_embed:
+            raise ValueError('Embeddings not available for models: {}'
+                             .format(', '.join(no_embed)))
+        create_mut_escape_embeddings(args, model, seqs, vocabulary)
+
 
     if args.semantics:
         if args.checkpoint is None and not args.train:

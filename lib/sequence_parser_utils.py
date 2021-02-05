@@ -1,6 +1,7 @@
 from dateutil.parser import parse as dparse
 
-def parse_viprbrc(entry):
+def parse_viprbrc(record):
+    entry = record.description
     fields = entry.split('|')
     if fields[7] == 'NA':
         date = None
@@ -28,7 +29,8 @@ def parse_viprbrc(entry):
     }
     return meta
 
-def parse_nih(entry):
+def parse_nih(record):
+    entry = record.description
     fields = entry.split('|')
 
     country = fields[3]
@@ -49,7 +51,8 @@ def parse_nih(entry):
     }
     return meta
 
-def parse_gisaid(entry):
+def parse_gisaid(record):
+    entry = record.description
     fields = entry.split('|')
 
     type_id = fields[1].split('/')[1]
@@ -82,5 +85,15 @@ def parse_gisaid(entry):
     return meta
 
 
-def parse_aggregated_mut_escapes(entry):
-   ...
+def parse_aggregated_mut_escapes(record):
+    meta = {
+        'id': record.id,
+        'strain': 'SARS-CoV-2',
+        'host': 'human',
+        'group': 'human',
+        'country': 'NA',
+        'continent': 'NA',
+        'dataset': 'mut_escape',
+    }
+
+    return meta
