@@ -1,4 +1,4 @@
-from utils import *
+from lib.utils import *
 
 from flair.data import Sentence
 from flair.models import SequenceTagger

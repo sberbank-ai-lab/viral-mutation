@@ -1,4 +1,4 @@
-from mutation import *
+from lib.mutation import *
 
 np.random.seed(1)
 random.seed(1)

@@ -1,4 +1,4 @@
-from utils import *
+from lib.utils import *
 
 def load_to2020():
     seq = str(SeqIO.read('data/cov/cov2_spike_wt.fasta', 'fasta').seq)

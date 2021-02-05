@@ -1,4 +1,4 @@
-from utils import *
+from lib.utils import *
 
 def load_phylo(namespace=None):
     if namespace is None:

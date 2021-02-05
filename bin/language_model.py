@@ -8,7 +8,7 @@ from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
-from utils import *
+from lib.utils import *
 
 
 class LanguageModel(object):

@@ -1,4 +1,4 @@
-from utils import *
+from lib.utils import *
 
 def print_purity(metas, entries):
     for entry in entries:

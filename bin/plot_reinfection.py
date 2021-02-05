@@ -1,4 +1,4 @@
-from utils import *
+from lib.utils import *
 
 def plot_reinfection(namespace='reinfection'):
     with open('target/cov/reinfection/cache/cov_mut_{}.txt'

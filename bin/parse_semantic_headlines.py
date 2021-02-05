@@ -1,4 +1,4 @@
-from utils import *
+from lib.utils import *
 
 def semantic_headlines(dirname):
     datasets = [ '1', 'A', '2', 'B' ]
