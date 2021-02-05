@@ -55,3 +55,15 @@ aggregated_mut_escapes.fasta
 ```
 
 **NOTE:** The first record in the file is a header.
+
+
+### Embeddings
+
+This file contains embeddings, computed from the default covid model from this repo:
+```
+mut_escape_embeddings.csv
+```
+
+Columns:
+- `id`: corresponds to the index in aggregated table
+- `x_0`, ..., `x_1023`: embedding coordinates.
