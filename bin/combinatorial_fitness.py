@@ -1,7 +1,7 @@
+import numpy as np
+from Bio.Seq import translate
 from lib.utils import Counter, SeqIO
 
-from Bio.Seq import translate
-import numpy as np
 
 def load_doud2016():
     strain = 'h1'
@@ -171,6 +171,53 @@ def load_wu2020():
             })
 
     return wt_seqs, seqs_fitness
+
+def load_mut_escapes():
+    strain = 'sars_cov_2'
+    wt_seq = SeqIO.read('data/cov/cov2_spike_wt.fasta', 'fasta').seq
+
+    seqs_fitness = {}
+    with open('escape_mutations/data/aggregated_mut_escapes.csv') as f:
+        f.readline()
+        for line in f:
+            fields = line.replace('"', '').rstrip().split(',')
+            log10Ka = float(-9)
+            mutable = [ aa for aa in wt_seq ]
+            mut_pos = []
+            pos = int(fields[0]) - 1
+            orig, mut = fields[1], fields[2]
+            assert(wt_seq[pos] == orig)
+            mutable[pos] = mut
+            mut_pos.append(pos)
+            mut_seq = ''.join(mutable)
+
+            if (mut_seq, strain) not in seqs_fitness:
+                seqs_fitness[(mut_seq, strain)] = [ {
+                    'strain': strain,
+                    'fitnesses': [ log10Ka ],
+                    'preferences': [ log10Ka ],
+                    'wildtype': wt_seq,
+                    'orig': orig,
+                    'mut_pos': mut_pos,
+                    'mut': mut,
+                } ]
+            else:
+                seqs_fitness[(mut_seq, strain)][0][
+                    'fitnesses'].append(log10Ka)
+                seqs_fitness[(mut_seq, strain)][0][
+                    'preferences'].append(log10Ka)
+
+    for fit_key in seqs_fitness:
+        seqs_fitness[fit_key][0]['fitness'] = np.median(
+            seqs_fitness[fit_key][0]['fitnesses']
+        )
+        seqs_fitness[fit_key][0]['preference'] = np.median(
+            seqs_fitness[fit_key][0]['preferences']
+        )
+
+    print(len(seqs_fitness))
+
+    return { strain: wt_seq }, seqs_fitness
 
 def load_starr2020():
     strain = 'sars_cov_2'

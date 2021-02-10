@@ -302,9 +302,9 @@ def analyze_comb_fitness(
             sem_change = abs(base_embedding - meta['embedding']).sum()
 
             data.append([
-                meta['strain'],
-                meta['fitness'],
-                meta['preference'],
+                meta['mut_pos'][0] + 1,
+                meta['orig'],
+                meta['mut'],
                 grammar,
                 sem_change,
                 sem_change + (beta * grammar),
@@ -313,40 +313,14 @@ def analyze_comb_fitness(
         del seqs_fitness_batch
 
     df = pd.DataFrame(data, columns=[
-        'strain', 'fitness', 'preference',
+        'site', 'wildtype', 'mutation',
         'predicted', 'sem_change', 'cscs'
     ])
 
-    print('\nStrain: {}'.format(strain))
-    print('\tGrammaticality correlation:')
-    print('\t\tSpearman r = {:.4f}, P = {:.4g}'
-          .format(*ss.spearmanr(df.preference, df.predicted)))
-    print('\t\tPearson rho = {:.4f}, P = {:.4g}'
-          .format(*ss.pearsonr(df.preference, df.predicted)))
+    df = df.sort_values(by='cscs', ascending=True)
 
-    print('\tSemantic change correlation:')
-    print('\t\tSpearman r = {:.4f}, P = {:.4g}'
-          .format(*ss.spearmanr(df.preference, df.sem_change)))
-    print('\t\tPearson rho = {:.4f}, P = {:.4g}'
-          .format(*ss.pearsonr(df.preference, df.sem_change)))
+    df.to_csv('ranks.csv', header=True, index=False)
 
-    plt.figure()
-    plt.scatter(df.preference, df.predicted, alpha=0.3)
-    plt.title(strain)
-    plt.xlabel('Preference')
-    plt.ylabel('Grammaticality')
-    plt.savefig('figures/combinatorial_fitness_grammar_{}_{}.png'
-                .format(args.namespace, strain), dpi=300)
-    plt.close()
-
-    plt.figure()
-    plt.scatter(df.preference, df.sem_change, alpha=0.3)
-    plt.title(strain)
-    plt.xlabel('Preference')
-    plt.ylabel('Semantic change')
-    plt.savefig('figures/combinatorial_fitness_semantics_{}_{}.png'
-                .format(args.namespace, strain), dpi=300)
-    plt.close()
 
 def analyze_semantics(args, model, vocabulary, seq_to_mutate, escape_seqs,
                       min_pos=None, max_pos=None, prob_cutoff=0., beta=1.,
