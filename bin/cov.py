@@ -136,7 +136,7 @@ def plot_umap(adata, categories, namespace='cov'):
                    save='_{}_{}.png'.format(namespace, category))
 
 def analyze_embedding(args, model, seqs, vocabulary):
-    seqs = embed_seqs(args, model, seqs, vocabulary, use_cache=False)
+    seqs = embed_seqs(args, model, seqs, vocabulary, use_cache=True)
 
     X, obs = [], {}
     obs['n_seq'] = []
@@ -227,15 +227,15 @@ def main():
                              .format(', '.join(no_embed)))
         analyze_embedding(args, model, seqs, vocabulary)
 
-    if args.mut_escapes:
-        if args.checkpoint is None and not args.train:
-            raise ValueError('Model must be trained or loaded '
-                             'from checkpoint.')
-        no_embed = { 'hmm' }
-        if args.model_name in no_embed:
-            raise ValueError('Embeddings not available for models: {}'
-                             .format(', '.join(no_embed)))
-        create_mut_escape_embeddings(args, model, seqs, vocabulary)
+    # if args.mut_escapes:
+    #     if args.checkpoint is None and not args.train:
+    #         raise ValueError('Model must be trained or loaded '
+    #                          'from checkpoint.')
+    #     no_embed = { 'hmm' }
+    #     if args.model_name in no_embed:
+    #         raise ValueError('Embeddings not available for models: {}'
+    #                          .format(', '.join(no_embed)))
+    #     create_mut_escape_embeddings(args, model, seqs, vocabulary)
 
 
     if args.semantics:
@@ -257,10 +257,20 @@ def main():
                           prob_cutoff=0, beta=1., plot_acquisition=True,
                           plot_namespace='cov2rbd')
 
+    # if args.combfit:
+    #     from combinatorial_fitness import load_starr2020
+    #     tprint('Starr et al. 2020...')
+    #     wt_seqs, seqs_fitness = load_starr2020()
+    #     strains = sorted(wt_seqs.keys())
+    #     for strain in strains:
+    #         analyze_comb_fitness(args, model, vocabulary,
+    #                              strain, wt_seqs[strain], seqs_fitness,
+    #                              comb_batch=10000, prob_cutoff=0., beta=1.)
+
     if args.combfit:
-        from combinatorial_fitness import load_starr2020
+        from combinatorial_fitness import load_mut_escapes
         tprint('Starr et al. 2020...')
-        wt_seqs, seqs_fitness = load_starr2020()
+        wt_seqs, seqs_fitness = load_mut_escapes()
         strains = sorted(wt_seqs.keys())
         for strain in strains:
             analyze_comb_fitness(args, model, vocabulary,
